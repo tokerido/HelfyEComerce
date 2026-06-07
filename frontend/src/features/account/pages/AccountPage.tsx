@@ -54,14 +54,26 @@ export function AccountPage() {
           </aside>
 
           <main className="flex-1 bg-surface border border-border rounded-2xl p-6">
-            {activeTab === 'orders' && <OrderHistoryList orders={orders} isLoading={isLoading} />}
-            {(activeTab === 'profile' || activeTab === 'security') && (
+            {activeTab === 'orders'  && <OrderHistoryList orders={orders} isLoading={isLoading} />}
+            {activeTab === 'profile' && (
               <ProfileForm
                 user={profile}
                 onUpdateProfile={updateProfile}
                 onChangePassword={changePassword}
                 isUpdating={isUpdating}
                 isChangingPass={isChangingPass}
+                showPasswordSection={false}
+              />
+            )}
+            {activeTab === 'security' && (
+              <ProfileForm
+                user={profile}
+                onUpdateProfile={updateProfile}
+                onChangePassword={changePassword}
+                isUpdating={isUpdating}
+                isChangingPass={isChangingPass}
+                showPasswordSection={true}
+                showProfileSection={false}
               />
             )}
           </main>

@@ -1,10 +1,14 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Package, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/shared/components/ui/Badge';
 import { Button } from '@/shared/components/ui/Button';
+import { Spinner } from '@/shared/components/ui/Spinner';
+import { OrderDetailCard } from './OrderDetailCard';
 import { formatCurrency } from '@/shared/utils/formatCurrency';
 import { formatDate } from '@/shared/utils/formatDate';
+import { accountApi } from '../api/accountApi';
 import { ROUTES } from '@/constants/routes';
 import type { OrderSummary } from '@/shared/types';
 
@@ -15,6 +19,16 @@ const statusVariant: Record<string, 'warning' | 'accent' | 'default' | 'success'
   delivered:  'success',
   cancelled:  'error',
 };
+
+function OrderDetailExpanded({ orderId }: { orderId: number }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['order', orderId],
+    queryFn:  () => accountApi.getOrderById(orderId),
+  });
+  if (isLoading) return <div className="flex justify-center py-4"><Spinner size="sm" /></div>;
+  if (!data) return null;
+  return <div className="px-4 pb-4"><OrderDetailCard order={data} /></div>;
+}
 
 interface OrderHistoryListProps { orders: OrderSummary[]; isLoading?: boolean }
 
@@ -57,6 +71,11 @@ export function OrderHistoryList({ orders, isLoading }: OrderHistoryListProps) {
               </button>
             </div>
           </div>
+          {expanded === order.id && (
+            <div className="border-t border-border">
+              <OrderDetailExpanded orderId={order.id} />
+            </div>
+          )}
         </div>
       ))}
     </div>

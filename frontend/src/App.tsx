@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AnimatePresence } from 'framer-motion';
 import { queryClient } from './app/queryClient';
@@ -31,6 +31,7 @@ function HomePage() {
 
 function AppContent() {
   const { token, logout } = useAuthStore();
+  const location = useLocation();
 
   useEffect(() => {
     if (token) {
@@ -43,7 +44,7 @@ function AppContent() {
       <CartDrawer />
       <ToastContainer />
       <AnimatePresence mode="wait">
-        <Routes>
+        <Routes location={location} key={location.pathname}>
           <Route path={ROUTES.HOME}     element={<HomePage />} />
           <Route path={ROUTES.LOGIN}    element={<LoginPage />} />
           <Route path={ROUTES.SIGNUP}   element={<SignupPage />} />

@@ -20,14 +20,16 @@ type ProfileData  = z.infer<typeof profileSchema>;
 type PasswordData = z.infer<typeof passwordSchema>;
 
 interface ProfileFormProps {
-  user:           User | undefined;
-  onUpdateProfile: (data: { name?: string; email?: string }) => void;
-  onChangePassword: (data: { currentPassword: string; newPassword: string }) => void;
-  isUpdating:     boolean;
-  isChangingPass: boolean;
+  user:                 User | undefined;
+  onUpdateProfile:      (data: { name?: string; email?: string }) => void;
+  onChangePassword:     (data: { currentPassword: string; newPassword: string }) => void;
+  isUpdating:           boolean;
+  isChangingPass:       boolean;
+  showProfileSection?:  boolean;
+  showPasswordSection?: boolean;
 }
 
-export function ProfileForm({ user, onUpdateProfile, onChangePassword, isUpdating, isChangingPass }: ProfileFormProps) {
+export function ProfileForm({ user, onUpdateProfile, onChangePassword, isUpdating, isChangingPass, showProfileSection = true, showPasswordSection = true }: ProfileFormProps) {
   const profileForm  = useForm<ProfileData>({ resolver: zodResolver(profileSchema) });
   const passwordForm = useForm<PasswordData>({ resolver: zodResolver(passwordSchema) });
 
@@ -37,23 +39,27 @@ export function ProfileForm({ user, onUpdateProfile, onChangePassword, isUpdatin
 
   return (
     <div className="space-y-8">
-      <div>
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Profile</h3>
-        <form onSubmit={profileForm.handleSubmit(onUpdateProfile)} className="space-y-4">
-          <Input label="Name" error={!!profileForm.formState.errors.name} errorMessage={profileForm.formState.errors.name?.message} {...profileForm.register('name')} />
-          <Input label="Email" type="email" error={!!profileForm.formState.errors.email} errorMessage={profileForm.formState.errors.email?.message} {...profileForm.register('email')} />
-          <Button type="submit" variant="primary" loading={isUpdating}>Save Changes</Button>
-        </form>
-      </div>
-      <div className="border-t border-border pt-8">
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Change Password</h3>
-        <form onSubmit={passwordForm.handleSubmit(({ currentPassword, newPassword }) => onChangePassword({ currentPassword, newPassword }))} className="space-y-4">
-          <Input label="Current Password" type="password" {...passwordForm.register('currentPassword')} />
-          <Input label="New Password" type="password" error={!!passwordForm.formState.errors.newPassword} errorMessage={passwordForm.formState.errors.newPassword?.message} {...passwordForm.register('newPassword')} />
-          <Input label="Confirm New Password" type="password" error={!!passwordForm.formState.errors.confirmPassword} errorMessage={passwordForm.formState.errors.confirmPassword?.message} {...passwordForm.register('confirmPassword')} />
-          <Button type="submit" variant="primary" loading={isChangingPass}>Change Password</Button>
-        </form>
-      </div>
+      {showProfileSection && (
+        <div>
+          <h3 className="text-lg font-semibold text-text-primary mb-4">Profile</h3>
+          <form onSubmit={profileForm.handleSubmit(onUpdateProfile)} className="space-y-4">
+            <Input label="Name" error={!!profileForm.formState.errors.name} errorMessage={profileForm.formState.errors.name?.message} {...profileForm.register('name')} />
+            <Input label="Email" type="email" error={!!profileForm.formState.errors.email} errorMessage={profileForm.formState.errors.email?.message} {...profileForm.register('email')} />
+            <Button type="submit" variant="primary" loading={isUpdating}>Save Changes</Button>
+          </form>
+        </div>
+      )}
+      {showPasswordSection && (
+        <div className={showProfileSection ? 'border-t border-border pt-8' : ''}>
+          <h3 className="text-lg font-semibold text-text-primary mb-4">Change Password</h3>
+          <form onSubmit={passwordForm.handleSubmit(({ currentPassword, newPassword }) => onChangePassword({ currentPassword, newPassword }))} className="space-y-4">
+            <Input label="Current Password" type="password" {...passwordForm.register('currentPassword')} />
+            <Input label="New Password" type="password" error={!!passwordForm.formState.errors.newPassword} errorMessage={passwordForm.formState.errors.newPassword?.message} {...passwordForm.register('newPassword')} />
+            <Input label="Confirm New Password" type="password" error={!!passwordForm.formState.errors.confirmPassword} errorMessage={passwordForm.formState.errors.confirmPassword?.message} {...passwordForm.register('confirmPassword')} />
+            <Button type="submit" variant="primary" loading={isChangingPass}>Change Password</Button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
