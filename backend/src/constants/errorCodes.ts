@@ -1,0 +1,29 @@
+export const ErrorCodes = {
+  // Auth
+  INVALID_CREDENTIALS:  'INVALID_CREDENTIALS',
+  TOKEN_EXPIRED:        'TOKEN_EXPIRED',
+  TOKEN_INVALID:        'TOKEN_INVALID',
+  EMAIL_ALREADY_EXISTS: 'EMAIL_ALREADY_EXISTS',
+  UNAUTHORIZED:         'UNAUTHORIZED',
+  FORBIDDEN:            'FORBIDDEN',
+
+  // Products
+  PRODUCT_NOT_FOUND: 'PRODUCT_NOT_FOUND',
+
+  // Cart
+  CART_ITEM_NOT_FOUND: 'CART_ITEM_NOT_FOUND',
+  INSUFFICIENT_STOCK:  'INSUFFICIENT_STOCK',
+
+  // Orders
+  ORDER_NOT_FOUND: 'ORDER_NOT_FOUND',
+
+  // Users
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+
+  // Generic
+  VALIDATION_ERROR:      'VALIDATION_ERROR',
+  INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
+  NOT_FOUND:             'NOT_FOUND',
+} as const;
+
+export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];
