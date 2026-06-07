@@ -1,348 +1,281 @@
 # initial.md — AI Agent Bootstrap Prompt
 
-You are a senior full-stack engineer. Your task is to build a complete, production-grade eCommerce platform from scratch. Every decision you make must be grounded in the blueprint files in this repository. Do not improvise architecture, naming conventions, or patterns — follow the specs exactly.
+You are a senior full-stack engineer. Your task is to build a complete,
+production-grade eCommerce platform from scratch using the blueprint files
+in this repository.
+
+**Do not read all files upfront.** Load each file only when the phase that
+needs it begins. This keeps your context window available for the actual code.
 
 ---
 
-## Your Reference Documents
+## Always-Loaded Files (read once, keep in mind throughout)
 
-Before writing a single line of code, read all of these files in order:
+Read these two files right now, before anything else. They apply to every
+line of code you will write:
 
-### Guidelines (engineering rules — must be followed everywhere)
-1. `ai-blueprint/guidelines/01-engineering-standards.md` — TypeScript config, naming conventions, layered architecture, API response shape, logging
-2. `ai-blueprint/guidelines/02-folder-structure.md` — exact file and directory layout for the entire repo
-3. `ai-blueprint/guidelines/03-error-handling.md` — AppError, asyncHandler, Zod validation, global error handler, frontend axios interceptor
-4. `ai-blueprint/guidelines/04-security.md` — JWT, bcrypt, CORS, Helmet, rate limiting, SQL injection prevention
-5. `ai-blueprint/guidelines/05-ui-design-system.md` — color palette, typography, component specs, Framer Motion patterns, Tailwind config
+- `ai-blueprint/guidelines/01-engineering-standards.md`
+  TypeScript config, naming conventions, API response shape, code style rules.
 
-### Capabilities (feature specifications — implement every item marked ✅)
-6. `ai-blueprint/capabilities/01-auth-module.md` — signup, login, JWT auth, ProtectedRoute, auth store
-7. `ai-blueprint/capabilities/02-product-catalog.md` — product listing, search, filters, product detail page
-8. `ai-blueprint/capabilities/03-cart-checkout.md` — persistent cart, cart drawer, 3-step checkout, order placement
-9. `ai-blueprint/capabilities/04-account-section.md` — order history, profile, password change
-10. `ai-blueprint/capabilities/05-database-schema.md` — full MySQL DDL, seed data, migration runner, DB connection pool
-11. `ai-blueprint/capabilities/06-docker-setup.md` — docker-compose, Dockerfiles, Nginx, .env.example
+- `ai-blueprint/guidelines/02-folder-structure.md`
+  Exact file and directory layout. Every file you create must land in the
+  correct place according to this map.
+
+Once read, do not re-read them — refer back mentally. Only re-read if you
+catch yourself deviating from a convention.
 
 ---
 
-## Build Order
+## Build Phases
 
-Follow this exact sequence. Complete each phase before starting the next. Do not skip ahead.
+Work through phases in order. Do not start a phase until the previous one
+passes its checkpoint. At the start of each phase, read only the files
+listed for that phase — nothing else.
 
 ---
 
 ### Phase 1 — Project Scaffolding
 
-**Goal:** Bare-bones repo structure with working Docker stack and an empty "Hello World" app.
+**Read now:** `ai-blueprint/capabilities/06-docker-setup.md`
 
-1. Create the root directory structure exactly as defined in `02-folder-structure.md`
-2. Create `docker-compose.yml` from `06-docker-setup.md`
-3. Create `.env.example` from `06-docker-setup.md`
-4. Initialize `backend/`:
-   - `npm init -y`, install all backend dependencies (see dependency list below)
-   - `tsconfig.json` from `01-engineering-standards.md`
-   - `src/index.ts` → creates Express app, listens on port from config
-   - `src/app.ts` → Express factory with middleware (helmet, cors, json parser, request logger)
-   - `src/config.ts` → typed env config
-   - `Dockerfile` from `06-docker-setup.md`
-5. Initialize `frontend/`:
-   - `npm create vite@latest . -- --template react-ts`
-   - Install all frontend dependencies (see list below)
-   - `tailwind.config.ts` with the full color palette from `05-ui-design-system.md`
-   - `vite.config.ts` from `06-docker-setup.md`
-   - `nginx.conf` from `06-docker-setup.md`
-   - `Dockerfile` from `06-docker-setup.md`
-6. Create `backend/src/db/connection.ts` from `05-database-schema.md`
-7. Create `backend/src/db/migrations/001_create_tables.sql` from `05-database-schema.md`
-8. Create `backend/src/db/migrations/002_seed_data.sql` from `05-database-schema.md`
-9. Create `backend/src/db/migrate.ts` from `05-database-schema.md`
+**Goal:** Bare-bones repo structure with a working Docker stack.
 
-**Checkpoint:** `docker compose up` must start all three containers (db, backend, frontend) without errors. Backend returns `{ "status": "ok" }` at `GET /api/health`.
+Tasks:
+- Create the directory structure from `02-folder-structure.md` (already loaded)
+- Create `docker-compose.yml`, `.env.example`, backend and frontend `Dockerfile`s,
+  and `nginx.conf` — all from `06-docker-setup.md`
+- Initialize `backend/` with `package.json`, `tsconfig.json`, `src/index.ts`,
+  `src/app.ts`, `src/config.ts`
+- Initialize `frontend/` with Vite + React + TypeScript, `tailwind.config.ts`,
+  `vite.config.ts`
+- Create `src/db/connection.ts`, `src/db/migrate.ts`
+
+**Checkpoint:** `docker compose up` starts all three containers without errors.
+Backend returns `{ "status": "ok" }` at `GET /api/health`.
 
 ---
 
-### Phase 2 — Backend Shared Infrastructure
+### Phase 2 — Database Schema & Migrations
 
-**Goal:** All cross-cutting concerns implemented before any feature work begins.
+**Read now:** `ai-blueprint/capabilities/05-database-schema.md`
 
-1. `src/shared/errors/AppError.ts` — from `03-error-handling.md`
-2. `src/constants/errorCodes.ts` — from `03-error-handling.md`
-3. `src/shared/types/api.ts` — `ApiResponse<T>` type
-4. `src/shared/middleware/asyncHandler.ts` — from `03-error-handling.md`
-5. `src/shared/middleware/validate.ts` — Zod validation middleware from `03-error-handling.md`
-6. `src/shared/middleware/authenticate.ts` — JWT middleware from `04-security.md`
-7. `src/shared/middleware/errorHandler.ts` — global error handler from `03-error-handling.md`
-8. `src/shared/middleware/requestLogger.ts` — pino-http middleware
-9. Register `errorHandler` as the last middleware in `app.ts`
+**Goal:** MySQL schema and seed data applied automatically on container start.
 
-**Checkpoint:** POST to any route with a malformed body returns `{ success: false, error: { code: 'VALIDATION_ERROR', message: '...' } }` with status 400.
+Tasks:
+- Create `001_create_tables.sql` and `002_seed_data.sql` using the exact DDL
+  from `05-database-schema.md`
+- Verify the migration runner in `migrate.ts` handles idempotency and the
+  DB retry loop
 
----
-
-### Phase 3 — Frontend Shared Infrastructure
-
-**Goal:** Design system, routing skeleton, global state, and API client in place.
-
-1. `src/shared/utils/cn.ts` — clsx + tailwind-merge from `05-ui-design-system.md`
-2. `src/shared/utils/formatCurrency.ts` — `(n: number) => '$' + n.toFixed(2)`
-3. `src/shared/utils/formatDate.ts` — format ISO date to "Mar 10, 2024"
-4. `src/shared/api/axiosInstance.ts` — axios instance with request/response interceptors from `03-error-handling.md`
-5. `src/app/queryClient.ts` — React Query client (staleTime: 60s, retry: 1)
-6. `src/constants/routes.ts` — all route path constants:
-   ```typescript
-   export const ROUTES = {
-     HOME: '/',
-     LOGIN: '/login',
-     SIGNUP: '/signup',
-     CATALOG: '/products',
-     PRODUCT_DETAIL: '/products/:slug',
-     CART: '/cart',
-     CHECKOUT: '/checkout',
-     ACCOUNT: '/account',
-   } as const;
-   ```
-7. `src/shared/types/index.ts` — all domain types: `User`, `Product`, `Category`, `CartItem`, `Cart`, `Order`, `OrderSummary`, `OrderDetail`, `ApiResponse<T>`, `PaginationMeta`
-8. Base UI components (`src/shared/components/ui/`): `Button`, `Input`, `Spinner`, `Badge`, `Card`, `Modal`, `Toast` — implement from `05-ui-design-system.md` specs
-9. Layout components: `Navbar`, `Footer`, `PageLayout`
-10. `src/shared/components/guards/ProtectedRoute.tsx`
-11. `src/App.tsx` — React Router setup with all routes, AnimatePresence wrapper, QueryClientProvider, auth initialization check
-12. `src/main.tsx` — renders App
-
-**Checkpoint:** App renders in browser. Navbar visible. Navigating to `/login` renders the login page shell (no form yet).
+**Checkpoint:** After `docker compose up`, the `ecommerce_db` database contains
+all tables and 22+ seed products. Confirmed via:
+```
+docker exec -it <db_container> mysql -u app_user -p ecommerce_db -e "SELECT COUNT(*) FROM products;"
+```
 
 ---
 
-### Phase 4 — Authentication
+### Phase 3 — Backend Shared Infrastructure
 
-**Goal:** Full login/signup flow working end-to-end.
+**Read now:** `ai-blueprint/guidelines/03-error-handling.md`
+             `ai-blueprint/guidelines/04-security.md`
 
-**Backend:**
-1. `features/auth/auth.types.ts` — Zod schemas (LoginSchema, SignupSchema), TypeScript types
-2. `features/auth/auth.repository.ts` — `findByEmail`, `createUser`
-3. `features/auth/auth.service.ts` — `signup`, `login`, `getMe`
-4. `features/auth/auth.controller.ts` — `signup`, `login`, `me`
-5. `features/auth/auth.router.ts` — register routes with rate limiter + validators
-6. Mount in `app.ts`: `app.use('/api/auth', authRouter)`
+**Goal:** All cross-cutting backend concerns in place before feature work.
 
-**Frontend:**
-1. `features/auth/store/authStore.ts` — Zustand store with localStorage persistence
-2. `features/auth/api/authApi.ts`
-3. `features/auth/hooks/useAuth.ts`
-4. `features/auth/pages/LoginPage.tsx` — split layout per `01-auth-module.md`
-5. `features/auth/pages/SignupPage.tsx`
-6. `features/auth/components/LoginForm.tsx`
-7. `features/auth/components/SignupForm.tsx`
-8. Auth initialization in `App.tsx` (verify token on load)
-9. Connect Navbar: show user dropdown when authenticated, Login/Signup links when not
+Tasks (implement exactly as specified in the files you just read):
+- `src/shared/errors/AppError.ts`
+- `src/constants/errorCodes.ts`
+- `src/shared/types/api.ts` — `ApiResponse<T>` type
+- `src/shared/middleware/asyncHandler.ts`
+- `src/shared/middleware/validate.ts` — Zod middleware
+- `src/shared/middleware/authenticate.ts` — JWT middleware
+- `src/shared/middleware/errorHandler.ts` — global error handler
+- `src/shared/middleware/requestLogger.ts` — pino-http
+- Register `errorHandler` last in `app.ts`
 
-**Checkpoint:** Can sign up with a new email, log in, see authenticated state in Navbar, and log out. Token survives page refresh. Navigating to `/account` while unauthenticated redirects to `/login`.
+You may now unload `03-error-handling.md` and `04-security.md` from active
+attention — the patterns are in the code.
 
----
-
-### Phase 5 — Product Catalog
-
-**Goal:** Product listing page with search/filter and product detail page.
-
-**Backend:**
-1. `features/products/product.types.ts`
-2. `features/products/product.repository.ts` — `findAll` (with dynamic filter query), `findBySlug`, `findRelated`
-3. `features/products/product.service.ts`
-4. `features/products/product.controller.ts`
-5. `features/products/product.router.ts`
-6. Categories router: `GET /api/categories`
-7. Mount in `app.ts`
-
-**Frontend:**
-1. `features/products/api/productsApi.ts`
-2. `features/products/hooks/useProducts.ts` — URL-driven filter state per `02-product-catalog.md`
-3. `features/products/components/SearchBar.tsx` — debounced input
-4. `features/products/components/ProductFilters.tsx` — category checkboxes, price range, sort
-5. `features/products/components/ProductCard.tsx` — with hover animation per `05-ui-design-system.md`
-6. `features/products/components/ProductGrid.tsx` — staggered animation, skeleton loading
-7. `features/products/pages/CatalogPage.tsx` — two-column layout (filters + grid)
-8. `features/products/pages/ProductDetailPage.tsx` — image gallery, details, related products
-
-**Checkpoint:** Products page loads with product grid. Search filters by name. Category filter works. Clicking a product navigates to its detail page. "Add to Cart" button visible on detail page (cart logic not wired yet).
+**Checkpoint:** A POST with a malformed body returns:
+```json
+{ "success": false, "error": { "code": "VALIDATION_ERROR", "message": "..." } }
+```
 
 ---
 
-### Phase 6 — Cart & Checkout
+### Phase 4 — Frontend Shared Infrastructure
 
-**Goal:** Full cart flow from add-to-cart through order placement.
+**Read now:** `ai-blueprint/guidelines/05-ui-design-system.md`
 
-**Backend:**
-1. `features/cart/cart.types.ts`
-2. `features/cart/cart.repository.ts`
-3. `features/cart/cart.service.ts` — `getOrCreateCart`, `addItem`, `updateItem`, `removeItem`, `syncCart`, `calculateTotals`
-4. `features/cart/cart.controller.ts`
-5. `features/cart/cart.router.ts` — all routes protected
-6. `features/orders/order.types.ts`
-7. `features/orders/order.repository.ts`
-8. `features/orders/order.service.ts` — `placeOrder` (validate stock → create order → clear cart)
-9. `features/orders/order.controller.ts`
-10. `features/orders/order.router.ts`
-11. Mount both in `app.ts`
+**Goal:** Design system, routing skeleton, global state, API client.
 
-**Frontend:**
-1. `features/cart/store/cartStore.ts` — local cart for unauthenticated users
-2. `features/cart/api/cartApi.ts`
-3. `features/cart/hooks/useCart.ts` — unified hook (server cart vs local cart)
-4. `features/cart/components/CartItem.tsx`
-5. `features/cart/components/CartDrawer.tsx` — slide-in drawer per `05-ui-design-system.md`
-6. `features/cart/components/CartSummary.tsx`
-7. `features/cart/pages/CartPage.tsx`
-8. Wire "Add to Cart" on ProductDetailPage and ProductCard
-9. Update Navbar cart icon with item count badge
-10. `features/checkout/components/CheckoutStepper.tsx`
-11. `features/checkout/components/ShippingStep.tsx`
-12. `features/checkout/components/PaymentStep.tsx`
-13. `features/checkout/components/ConfirmationStep.tsx`
-14. `features/checkout/pages/CheckoutPage.tsx`
-15. On login, call `POST /api/cart/sync` with any local cart items, then clear local cart
+Tasks:
+- Apply the full Tailwind color palette and font config from `05-ui-design-system.md`
+- `src/shared/utils/cn.ts`, `formatCurrency.ts`, `formatDate.ts`
+- `src/shared/api/axiosInstance.ts` — with auth + error interceptors
+  (pattern is in `03-error-handling.md` which you already built from — no need to re-read)
+- `src/app/queryClient.ts`
+- `src/constants/routes.ts`
+- `src/shared/types/index.ts` — all domain types
+- Base UI components: `Button`, `Input`, `Spinner`, `Badge`, `Card`, `Modal`, `Toast`
+  — implement to the specs in `05-ui-design-system.md`
+- Layout: `Navbar`, `Footer`, `PageLayout`
+- `ProtectedRoute.tsx`
+- `App.tsx` with React Router, AnimatePresence, QueryClientProvider
 
-**Checkpoint:** Can add products to cart. Cart drawer shows items. Cart persists on page refresh (for authenticated users). Checkout flow works through all 3 steps. Order confirmation screen shows after "Place Order".
+You may now unload `05-ui-design-system.md` — the design tokens are in
+`tailwind.config.ts` and the component patterns are in the code.
+
+**Checkpoint:** App renders in browser. Navbar visible. `/login` renders
+without errors.
 
 ---
 
-### Phase 7 — Account Section
+### Phase 5 — Authentication
+
+**Read now:** `ai-blueprint/capabilities/01-auth-module.md`
+
+**Goal:** Full login/signup flow, end-to-end.
+
+Tasks (backend then frontend, per `01-auth-module.md`):
+- `auth.types.ts`, `auth.repository.ts`, `auth.service.ts`,
+  `auth.controller.ts`, `auth.router.ts`
+- Mount at `/api/auth` in `app.ts`
+- `authStore.ts` (Zustand + localStorage persistence)
+- `authApi.ts`, `useAuth.ts`
+- `LoginPage.tsx`, `SignupPage.tsx`, `LoginForm.tsx`, `SignupForm.tsx`
+- Auth init check in `App.tsx`
+- Navbar auth state wiring
+
+Unload `01-auth-module.md` after implementation.
+
+**Checkpoint:** Sign up → log in → Navbar shows user → log out → redirect to
+`/login`. Token survives page refresh.
+
+---
+
+### Phase 6 — Product Catalog
+
+**Read now:** `ai-blueprint/capabilities/02-product-catalog.md`
+
+**Goal:** Product listing with search/filter and product detail page.
+
+Tasks (per `02-product-catalog.md`):
+- `product.types.ts`, `product.repository.ts` (dynamic filter query),
+  `product.service.ts`, `product.controller.ts`, `product.router.ts`
+- Categories router: `GET /api/categories`
+- `productsApi.ts`, `useProducts.ts` (URL-driven filter state)
+- `SearchBar.tsx`, `ProductFilters.tsx`, `ProductCard.tsx`, `ProductGrid.tsx`
+- `CatalogPage.tsx`, `ProductDetailPage.tsx`
+
+Unload `02-product-catalog.md` after implementation.
+
+**Checkpoint:** Products page loads grid. Search and category filter work.
+Product detail page renders with image gallery and "Add to Cart" button.
+
+---
+
+### Phase 7 — Cart & Checkout
+
+**Read now:** `ai-blueprint/capabilities/03-cart-checkout.md`
+
+**Goal:** Persistent cart, cart drawer, and full 3-step checkout.
+
+Tasks (per `03-cart-checkout.md`):
+- Cart backend: `cart.types.ts` → `cart.repository.ts` → `cart.service.ts`
+  → `cart.controller.ts` → `cart.router.ts`
+- Orders backend: `order.types.ts` → `order.repository.ts` →
+  `order.service.ts` → `order.controller.ts` → `order.router.ts`
+- Mount both in `app.ts`
+- `cartStore.ts` (local cart for unauthenticated users)
+- `cartApi.ts`, `useCart.ts` (unified hook)
+- `CartItem.tsx`, `CartDrawer.tsx`, `CartSummary.tsx`, `CartPage.tsx`
+- Wire "Add to Cart" on `ProductCard` and `ProductDetailPage`
+- Navbar cart icon with item count badge
+- `CheckoutStepper.tsx`, `ShippingStep.tsx`, `PaymentStep.tsx`,
+  `ConfirmationStep.tsx`, `CheckoutPage.tsx`
+- On login: call `POST /api/cart/sync`, then clear local cart
+
+Unload `03-cart-checkout.md` after implementation.
+
+**Checkpoint:** Add product → open cart drawer → proceed to checkout →
+complete all 3 steps → see confirmation screen with order number.
+
+---
+
+### Phase 8 — Account Section
+
+**Read now:** `ai-blueprint/capabilities/04-account-section.md`
 
 **Goal:** Order history and profile management.
 
-**Backend:**
-1. `features/users/user.types.ts`
-2. `features/users/user.repository.ts` — `findById`, `findByIdWithHash`, `update`, `updatePassword`
-3. `features/users/user.service.ts`
-4. `features/users/user.controller.ts`
-5. `features/users/user.router.ts`
-6. Extend `order.repository.ts` with `findByUserId`, `findByIdWithItems`
-7. Extend `order.controller.ts` and `order.router.ts` with GET endpoints
-8. Mount user router in `app.ts`
+Tasks (per `04-account-section.md`):
+- `user.types.ts`, `user.repository.ts`, `user.service.ts`,
+  `user.controller.ts`, `user.router.ts`
+- Extend `order.repository.ts` + `order.router.ts` with GET endpoints
+- `accountApi.ts`, `useAccount.ts`
+- `OrderHistoryList.tsx`, `OrderDetailCard.tsx`, `ProfileForm.tsx`
+- `AccountPage.tsx` — 3-tab layout
 
-**Frontend:**
-1. `features/account/api/accountApi.ts`
-2. `features/account/hooks/useAccount.ts`
-3. `features/account/components/OrderHistoryList.tsx`
-4. `features/account/components/OrderDetailCard.tsx`
-5. `features/account/components/ProfileForm.tsx`
-6. `features/account/pages/AccountPage.tsx` — 3-tab layout per `04-account-section.md`
+Unload `04-account-section.md` after implementation.
 
-**Checkpoint:** Account page shows order history for logged-in user. Can update name/email. Can change password. Order detail view shows items, address, and totals.
+**Checkpoint:** Account page shows order history. Profile update works.
+Password change works.
 
 ---
 
-### Phase 8 — Polish & Integration
+### Phase 9 — Polish & Final Verification
 
-**Goal:** Final wiring, error states, and visual completeness.
+**No new files to read.** Everything needed is already in the codebase.
 
-1. Add empty states to all list views (no products, empty cart, no orders)
-2. Add loading skeleton screens to ProductGrid and OrderHistoryList
-3. Add Framer Motion page transitions to all route changes (see `05-ui-design-system.md`)
-4. Ensure all error states show user-friendly toast notifications
-5. Add `ProtectedRoute` wrapper to `/checkout` and `/account` routes
-6. Verify the complete user journey end-to-end:
-   - Sign up → browse catalog → search + filter → add to cart → checkout → view order in account
-7. Responsive check: verify mobile layout on all pages (Navbar collapses, filters move to bottom sheet, product grid uses 1–2 columns)
-8. Final `docker compose up` verification — clean build from scratch, no errors
+Tasks:
+- Empty states for all list views (no products, empty cart, no orders)
+- Skeleton loading screens on `ProductGrid` and `OrderHistoryList`
+- Framer Motion page transitions on all route changes
+- `ProtectedRoute` on `/checkout` and `/account`
+- Mobile layout check: Navbar collapses, filters move to bottom sheet,
+  grid uses 1–2 columns on small screens
+- Full end-to-end journey: sign up → browse → filter → add to cart →
+  checkout → view order in account
+- Clean `docker compose up` from scratch — no errors
+
+**Final Checkpoint:**
+- [ ] `docker compose up` works from a fresh clone
+- [ ] All 4 features work end-to-end
+- [ ] Dark premium UI with animations
+- [ ] All errors return `{ success: false, error: { code, message } }`
+- [ ] No hardcoded secrets or URLs
 
 ---
 
-## Full Dependency List
+## On-Demand Reference
 
-### Backend
+If you're unsure about something mid-build, here's where to look — but only
+re-read the specific section you need, not the whole file:
 
-```json
-{
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5",
-    "mysql2": "^3.6.5",
-    "jsonwebtoken": "^9.0.2",
-    "bcrypt": "^5.1.1",
-    "zod": "^3.22.4",
-    "pino": "^8.17.2",
-    "pino-http": "^9.0.0"
-  },
-  "devDependencies": {
-    "typescript": "^5.3.3",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "@types/express": "^4.17.21",
-    "@types/cors": "^2.8.17",
-    "@types/bcrypt": "^5.0.2",
-    "@types/jsonwebtoken": "^9.0.5",
-    "@types/node": "^20.11.0"
-  }
-}
-```
-
-### Frontend
-
-```json
-{
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.21.3",
-    "axios": "^1.6.5",
-    "@tanstack/react-query": "^5.17.19",
-    "zustand": "^4.4.7",
-    "react-hook-form": "^7.49.3",
-    "@hookform/resolvers": "^3.3.4",
-    "zod": "^3.22.4",
-    "framer-motion": "^11.0.3",
-    "lucide-react": "^0.309.0",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.0",
-    "react-markdown": "^9.0.1"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.1",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.11",
-    "tailwindcss": "^3.4.1",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.33",
-    "@types/react": "^18.2.48",
-    "@types/react-dom": "^18.2.18"
-  }
-}
-```
+| Question | File | Section |
+|---|---|---|
+| How do I name this file/variable? | `01-engineering-standards.md` | Naming Conventions |
+| Where does this file go? | `02-folder-structure.md` | relevant feature folder |
+| How do I handle this error? | `03-error-handling.md` | relevant layer (service/repo/controller) |
+| What HTTP status for this case? | `01-engineering-standards.md` | HTTP Status Code Rules |
+| How do I style this component? | `05-ui-design-system.md` | relevant component section |
+| What does this API endpoint return? | relevant capability file | API Endpoints section |
+| How is this DB table structured? | `05-database-schema.md` | schema DDL |
 
 ---
 
 ## Non-Negotiable Rules
 
-These override any conflicting decision you might make:
+These 10 rules override any other decision. Violating one is a build failure:
 
-1. **All SQL uses parameterized queries** — no string interpolation with user data (see `04-security.md`)
-2. **All controllers use `asyncHandler`** — no `try/catch` in controllers (see `03-error-handling.md`)
-3. **All request bodies validated with Zod** before the controller runs (see `03-error-handling.md`)
-4. **Passwords never returned** in any API response — strip `password_hash` in repository layer
-5. **No direct DB calls outside repositories** — controllers and services never import `pool`
-6. **Feature isolation** — no cross-feature imports (feature A never imports from feature B)
-7. **`cn()` for all conditional Tailwind classes** — never template literals for className
-8. **Migrations are idempotent** — `CREATE TABLE IF NOT EXISTS`, `INSERT IGNORE` (see `06-docker-setup.md`)
-9. **Frontend API URL** comes from `VITE_API_URL` env var — never hardcoded
-10. **The app must start with `docker compose up`** — test this at the end of every phase
-
----
-
-## When You're Unsure
-
-- Check the relevant capability or guideline file first
-- Follow existing patterns in the codebase rather than introducing new ones
-- When in doubt between two valid approaches, pick the simpler one
-- If a spec is ambiguous, make a reasonable decision and document it as a comment
-
----
-
-## Done
-
-The project is complete when:
-- [ ] `docker compose up` starts cleanly from a fresh clone
-- [ ] All 4 eCommerce features work end-to-end (auth, catalog, cart/checkout, account)
-- [ ] The UI matches the design system (dark theme, premium feel, animations)
-- [ ] All API errors return the standard `{ success: false, error: { code, message } }` shape
-- [ ] No hardcoded secrets or URLs
+1. All SQL uses parameterized queries — no string interpolation with user data
+2. All controllers use `asyncHandler` — no `try/catch` in controllers
+3. All request bodies validated with Zod before the controller runs
+4. Passwords never returned in any API response — strip `password_hash` in repo layer
+5. No direct DB calls outside repositories — controllers/services never import `pool`
+6. No cross-feature imports — feature A never imports from feature B
+7. `cn()` for all conditional Tailwind classes — never template literals
+8. Migrations are idempotent — `CREATE TABLE IF NOT EXISTS`, `INSERT IGNORE`
+9. Frontend API URL from `VITE_API_URL` env var — never hardcoded
+10. `docker compose up` must work at the end of every phase
